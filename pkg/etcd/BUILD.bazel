@@ -1,0 +1,28 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "etcd",
+    srcs = [
+        "client.go",
+        "misc.go",
+        "server.go",
+        "validate.go",
+    ],
+    importpath = "github.com/quentin-m/etcd-cloud-operator/pkg/etcd",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/logger",
+        "//pkg/providers/snapshot",
+        "//pkg/providers/snapshot/etcd",
+        "@io_etcd_go_etcd_api_v3//etcdserverpb:go_default_library",
+        "@io_etcd_go_etcd_api_v3//v3rpc/rpctypes:go_default_library",
+        "@io_etcd_go_etcd_client_pkg_v3//transport:go_default_library",
+        "@io_etcd_go_etcd_client_pkg_v3//types:go_default_library",
+        "@io_etcd_go_etcd_client_v3//:go_default_library",
+        "@io_etcd_go_etcd_client_v3//concurrency:go_default_library",
+        "@io_etcd_go_etcd_etcdutl_v3//snapshot:go_default_library",
+        "@io_etcd_go_etcd_server_v3//embed:go_default_library",
+        "@io_etcd_go_etcd_server_v3//mvcc:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)

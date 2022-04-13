@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "operator",
+    srcs = [
+        "acl.go",
+        "misc.go",
+        "operator.go",
+    ],
+    importpath = "github.com/quentin-m/etcd-cloud-operator/pkg/operator",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/etcd",
+        "//pkg/providers/asg",
+        "//pkg/providers/snapshot",
+        "@in_gopkg_yaml_v2//:go_default_library",
+        "@io_etcd_go_etcd_api_v3//v3rpc/rpctypes:go_default_library",
+        "@io_etcd_go_etcd_client_v3//:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)

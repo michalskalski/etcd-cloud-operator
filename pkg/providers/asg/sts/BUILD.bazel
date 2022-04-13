@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "sts",
+    srcs = ["sts.go"],
+    importpath = "github.com/quentin-m/etcd-cloud-operator/pkg/providers/asg/sts",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/providers/asg",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)

@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "logger",
+    srcs = ["logger.go"],
+    importpath = "github.com/quentin-m/etcd-cloud-operator/pkg/logger",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@io_etcd_go_etcd_client_pkg_v3//logutil:go_default_library",
+        "@io_etcd_go_etcd_server_v3//embed:go_default_library",
+        "@io_moul_zapfilter//:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//grpclog:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+        "@org_uber_go_zap//zapcore:go_default_library",
+        "@org_uber_go_zap//zapgrpc:go_default_library",
+    ],
+)

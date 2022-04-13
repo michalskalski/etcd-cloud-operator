@@ -4,3 +4,9 @@
 *.tfstate.backup
 *.tfvars
 vendor/
+
+# ignore bazel files
+bazel-bin
+bazel-out
+bazel-testlogs
+bazel-*

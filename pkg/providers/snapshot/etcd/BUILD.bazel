@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "etcd",
+    srcs = ["etcd.go"],
+    importpath = "github.com/quentin-m/etcd-cloud-operator/pkg/providers/snapshot/etcd",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/providers",
+        "//pkg/providers/snapshot",
+        "@io_etcd_go_etcd_etcdutl_v3//snapshot:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)

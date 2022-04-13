@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "tester",
+    srcs = [
+        "client.go",
+        "metrics.go",
+        "stresser.go",
+        "test_cases.go",
+        "tester.go",
+    ],
+    importpath = "github.com/quentin-m/etcd-cloud-operator/pkg/tester",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/etcd",
+        "@com_github_prometheus_client_golang//prometheus:go_default_library",
+        "@com_github_prometheus_client_golang//prometheus/promhttp:go_default_library",
+        "@io_etcd_go_etcd_api_v3//etcdserverpb:go_default_library",
+        "@io_etcd_go_etcd_client_v3//:go_default_library",
+        "@org_golang_x_crypto//ssh:go_default_library",
+        "@org_golang_x_crypto//ssh/agent:go_default_library",
+        "@org_golang_x_time//rate:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)
