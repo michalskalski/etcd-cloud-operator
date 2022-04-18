@@ -37,6 +37,7 @@ func main() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	flagConfigPath := flag.String("config", "", "Load configuration from the specified file.")
 	flagLogLevel := flag.String("log-level", "info", "Define the logging level.")
+	flagWeServerPort := flag.Int("web-server-port", 2378, "Define listen port for status service.")
 	flag.Parse()
 
 	// Initialize logging system.
@@ -48,6 +49,11 @@ func main() {
 		zap.S().With(zap.Error(err)).Fatal("failed to load configuration")
 	}
 
+	if config.ECO.WebServerPort == nil {
+		port := int32(*flagWeServerPort)
+		config.ECO.WebServerPort = &port
+	}
+
 	// Run.
-	operator.New(config.ECO).Run()
+	operator.New(config.ECO).Run(*flagWeServerPort)
 }

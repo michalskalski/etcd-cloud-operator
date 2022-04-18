@@ -33,8 +33,6 @@ import (
 
 const (
 	loopInterval = 15 * time.Second
-
-	webServerPort = 2378
 )
 
 type Operator struct {
@@ -67,12 +65,13 @@ type Operator struct {
 
 // Config is the global configuration for an instance of ECO.
 type Config struct {
-	CheckInterval        time.Duration `yaml:"check-interval"`
-	UnhealthyMemberTTL 	 time.Duration `yaml:"unhealthy-member-ttl"`
+	CheckInterval      time.Duration `yaml:"check-interval"`
+	UnhealthyMemberTTL time.Duration `yaml:"unhealthy-member-ttl"`
 
-	Etcd     etcd.EtcdConfiguration `yaml:"etcd"`
-	ASG      asg.Config             `yaml:"asg"`
-	Snapshot snapshot.Config        `yaml:"snapshot"`
+	WebServerPort *int32                 `yaml:"webServerPort"`
+	Etcd          etcd.EtcdConfiguration `yaml:"etcd"`
+	ASG           asg.Config             `yaml:"asg"`
+	Snapshot      snapshot.Config        `yaml:"snapshot"`
 }
 
 func New(cfg Config) *Operator {
@@ -97,7 +96,7 @@ func New(cfg Config) *Operator {
 	}
 }
 
-func (s *Operator) Run() {
+func (s *Operator) Run(webServerPort int) {
 	go s.webserver()
 
 	for {
@@ -132,7 +131,7 @@ func (s *Operator) evaluate() error {
 	}
 
 	s.etcdRunning = s.server.IsRunning()
-	s.etcdHealthy, s.isSeeder, s.states = fetchStatuses(s.httpClient, client, asgInstances, asgSelf)
+	s.etcdHealthy, s.isSeeder, s.states = fetchStatuses(s.httpClient, client, asgInstances, asgSelf, *s.cfg.WebServerPort)
 	s.clusterSize = asgSize
 
 	s.etcdClient = client
@@ -229,7 +228,7 @@ func (s *Operator) webserver() {
 			zap.S().With(zap.Error(err)).Warn("failed to write status")
 		}
 	})
-	zap.S().Fatal(http.ListenAndServe(fmt.Sprintf(":%d", webServerPort), nil))
+	zap.S().Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *s.cfg.WebServerPort), nil))
 }
 
 func (s *Operator) wait() {

@@ -54,6 +54,9 @@ type ServerConfig struct {
 	BindAddress             string
 	PublicAddress           string
 	PrivateAddress          string
+	ClientPort              int32
+	PeerPort                int32
+	MetricsPort             int32
 	ClientSC                SecurityConfig
 	PeerSC                  SecurityConfig
 	UnhealthyMemberTTL      time.Duration
@@ -94,7 +97,7 @@ func (c *Server) Seed(snapshot *snapshot.Metadata) error {
 
 	// Set the internal configuration.
 	c.cfg.clusterState = embed.ClusterStateFlagNew
-	c.cfg.initialPURLs = map[string]string{c.cfg.Name: peerURL(c.cfg.PrivateAddress, c.cfg.PeerSC.TLSEnabled())}
+	c.cfg.initialPURLs = map[string]string{c.cfg.Name: peerURL(c.cfg.PrivateAddress, c.cfg.PeerSC.TLSEnabled(), c.cfg.PeerPort)}
 
 	// Start the server.
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStartTimeout)
@@ -113,7 +116,7 @@ func (c *Server) Join(cluster *Client) error {
 	}
 
 	// Set the internal configuration.
-	c.cfg.initialPURLs = map[string]string{c.cfg.Name: peerURL(c.cfg.PrivateAddress, c.cfg.PeerSC.TLSEnabled())}
+	c.cfg.initialPURLs = map[string]string{c.cfg.Name: peerURL(c.cfg.PrivateAddress, c.cfg.PeerSC.TLSEnabled(), c.cfg.PeerPort)}
 	for _, member := range members.Members {
 		if member.Name == "" {
 			continue
@@ -151,7 +154,7 @@ func (c *Server) Join(cluster *Client) error {
 	os.RemoveAll(c.cfg.DataDir)
 
 	// Add ourselves as a member.
-	memberID, unlock, err := cluster.AddMember(c.cfg.Name, []string{peerURL(c.cfg.PrivateAddress, c.cfg.PeerSC.TLSEnabled())})
+	memberID, unlock, err := cluster.AddMember(c.cfg.Name, []string{peerURL(c.cfg.PrivateAddress, c.cfg.PeerSC.TLSEnabled(), c.cfg.PeerPort)})
 	if err != nil {
 		return fmt.Errorf("failed to add ourselves as a member of the cluster: %v", err)
 	}
@@ -184,7 +187,7 @@ func (c *Server) Restore(metadata *snapshot.Metadata) error {
 	// directly from the data directory, to a temporary file when Get is called.
 	os.RemoveAll(c.cfg.DataDir)
 
-	restorePeerURL := peerURL(c.cfg.PrivateAddress, c.cfg.PeerSC.TLSEnabled())
+	restorePeerURL := peerURL(c.cfg.PrivateAddress, c.cfg.PeerSC.TLSEnabled(), c.cfg.PeerPort)
 	restoreCfg := etcdsnap.RestoreConfig{
 		SnapshotPath:        path,
 		Name:                c.cfg.Name,
@@ -333,11 +336,11 @@ func (c *Server) startServer(ctx context.Context) error {
 	etcdCfg.ClientTLSInfo = c.cfg.ClientSC.TLSInfo()
 	etcdCfg.SelfSignedCertValidity = 5
 	etcdCfg.InitialCluster = initialCluster(c.cfg.initialPURLs)
-	etcdCfg.LPUrls, _ = types.NewURLs([]string{peerURL(c.cfg.BindAddress, c.cfg.PeerSC.TLSEnabled())})
-	etcdCfg.APUrls, _ = types.NewURLs([]string{peerURL(c.cfg.PrivateAddress, c.cfg.PeerSC.TLSEnabled())})
-	etcdCfg.LCUrls, _ = types.NewURLs([]string{ClientURL(c.cfg.BindAddress, c.cfg.ClientSC.TLSEnabled())})
-	etcdCfg.ACUrls, _ = types.NewURLs([]string{ClientURL(c.cfg.PublicAddress, c.cfg.ClientSC.TLSEnabled())})
-	etcdCfg.ListenMetricsUrls = append(metricsURLs(c.cfg.BindAddress), metricsURLs("127.0.0.1")...)
+	etcdCfg.LPUrls, _ = types.NewURLs([]string{peerURL(c.cfg.BindAddress, c.cfg.PeerSC.TLSEnabled(), c.cfg.PeerPort)})
+	etcdCfg.APUrls, _ = types.NewURLs([]string{peerURL(c.cfg.PrivateAddress, c.cfg.PeerSC.TLSEnabled(), c.cfg.PeerPort)})
+	etcdCfg.LCUrls, _ = types.NewURLs([]string{ClientURL(c.cfg.BindAddress, c.cfg.ClientSC.TLSEnabled(), c.cfg.ClientPort)})
+	etcdCfg.ACUrls, _ = types.NewURLs([]string{ClientURL(c.cfg.PublicAddress, c.cfg.ClientSC.TLSEnabled(), c.cfg.ClientPort)})
+	etcdCfg.ListenMetricsUrls = append(metricsURLs(c.cfg.BindAddress, c.cfg.MetricsPort), metricsURLs("127.0.0.1", c.cfg.MetricsPort)...)
 	etcdCfg.Metrics = "extensive"
 	etcdCfg.QuotaBackendBytes = c.cfg.DataQuota
 	etcdCfg.AutoCompactionMode = c.cfg.AutoCompactionMode
@@ -431,7 +434,7 @@ func (c *Server) runMemberCleaner() {
 			}
 
 			// Determine if the member is healthy and set the last time the member has been seen healthy.
-			if c, err := NewClient([]string{URL2Address(member.PeerURLs[0])}, c.cfg.ClientSC, false); err == nil {
+			if c, err := NewClient([]string{member.PeerURLs[0]}, c.cfg.ClientSC, false); err == nil {
 				if c.IsHealthy(5, 5*time.Second) {
 					members[member.ID].lastSeenHealthy = time.Now()
 				}

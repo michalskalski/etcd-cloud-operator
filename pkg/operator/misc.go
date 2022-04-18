@@ -68,7 +68,7 @@ func initProviders(cfg Config) (asg.Provider, snapshot.Provider) {
 	return asgProvider, snapshotProvider
 }
 
-func fetchStatuses(httpClient *http.Client, etcdClient *etcd.Client, asgInstances []asg.Instance, asgSelf asg.Instance) (bool, bool, map[string]int) {
+func fetchStatuses(httpClient *http.Client, etcdClient *etcd.Client, asgInstances []asg.Instance, asgSelf asg.Instance, webServerPort int32) (bool, bool, map[string]int) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	wg.Add(1 + len(asgInstances))
@@ -86,7 +86,7 @@ func fetchStatuses(httpClient *http.Client, etcdClient *etcd.Client, asgInstance
 		go func(asgInstance asg.Instance) {
 			defer wg.Done()
 
-			st, err := fetchStatus(httpClient, asgInstance)
+			st, err := fetchStatus(httpClient, asgInstance, webServerPort)
 			if err != nil {
 				zap.S().With(zap.Error(err)).Warnf("failed to query %s", asgInstance.Name())
 				return
@@ -120,10 +120,10 @@ func fetchStatuses(httpClient *http.Client, etcdClient *etcd.Client, asgInstance
 	return etcdHealthy, ecoStatuses[len(ecoStatuses)-1].instance.Name() == asgSelf.Name(), ecoStates
 }
 
-func fetchStatus(httpClient *http.Client, instance asg.Instance) (*status, error) {
+func fetchStatus(httpClient *http.Client, instance asg.Instance, webServerPort int32) (*status, error) {
 	var st = status{
 		instance: instance,
-		State: "UNKNOWN",
+		State:    "UNKNOWN",
 		Revision: 0,
 	}
 
@@ -149,9 +149,12 @@ func serverConfig(cfg Config, asgSelf asg.Instance, snapshotProvider snapshot.Pr
 		DataQuota:               cfg.Etcd.BackendQuota,
 		AutoCompactionMode:      cfg.Etcd.AutoCompactionMode,
 		AutoCompactionRetention: cfg.Etcd.AutoCompactionRetention,
-		BindAddress:			 asgSelf.BindAddress(),
+		BindAddress:             asgSelf.BindAddress(),
 		PublicAddress:           stringOverride(asgSelf.Address(), cfg.Etcd.AdvertiseAddress),
 		PrivateAddress:          asgSelf.Address(),
+		PeerPort:                setPort(cfg.Etcd.PeerPort, etcd.DefaultPeerPort),
+		ClientPort:              setPort(cfg.Etcd.ClientPort, etcd.DefaultClientPort),
+		MetricsPort:             setPort(cfg.Etcd.MetricsPort, etcd.DefaultMetricsPort),
 		ClientSC:                cfg.Etcd.ClientTransportSecurity,
 		PeerSC:                  cfg.Etcd.PeerTransportSecurity,
 		UnhealthyMemberTTL:      cfg.UnhealthyMemberTTL,
@@ -160,6 +163,14 @@ func serverConfig(cfg Config, asgSelf asg.Instance, snapshotProvider snapshot.Pr
 		SnapshotTTL:             cfg.Snapshot.TTL,
 		JWTAuthTokenConfig:      cfg.Etcd.JWTAuthTokenConfig,
 	}
+
+}
+
+func setPort(configPort *int32, defaultPort int32) int32 {
+	if configPort != nil {
+		return *configPort
+	}
+	return defaultPort
 }
 
 func instancesAddresses(instances []asg.Instance) (addresses []string) {

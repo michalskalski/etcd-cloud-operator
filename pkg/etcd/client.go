@@ -25,7 +25,7 @@ import (
 
 	"go.etcd.io/etcd/api/v3/etcdserverpb"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
-	"go.etcd.io/etcd/client/v3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/concurrency"
 	"go.etcd.io/etcd/server/v3/mvcc"
 	"go.uber.org/zap"
@@ -58,7 +58,7 @@ func NewClient(clientsAddresses []string, sc SecurityConfig, autoSync bool) (*Cl
 	}
 
 	client, err := clientv3.New(clientv3.Config{
-		Endpoints:        ClientsURLs(clientsAddresses, sc.TLSEnabled()),
+		Endpoints:        clientsAddresses,
 		DialTimeout:      defaultDialTimeout,
 		TLS:              tc,
 		AutoSyncInterval: autoSyncInterval,
@@ -256,7 +256,7 @@ func (c *Client) GetRevisionsHashes() (map[string]int64, map[string]int64, error
 	defer cancel()
 
 	f := func(c *Client, m *etcdserverpb.Member) error {
-		cURL := ClientURL(URL2Address(m.PeerURLs[0]), c.SC.TLSEnabled())
+		cURL := m.PeerURLs[0]
 
 		s, err := c.Status(ctx, cURL)
 		if err != nil {
@@ -300,7 +300,7 @@ func (c *Client) Cleanup() error {
 		mu.Lock()
 		defer mu.Unlock()
 
-		if _, err := c.Defragment(ctx, ClientURL(URL2Address(m.PeerURLs[0]), c.SC.TLSEnabled())); err != nil {
+		if _, err := c.Defragment(ctx, m.PeerURLs[0]); err != nil {
 			return fmt.Errorf("failed to defragment: %v", err)
 		}
 		return nil

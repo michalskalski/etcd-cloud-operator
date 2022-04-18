@@ -43,9 +43,9 @@ func isHealthy(c *etcd.Client, clusterSize int) (uint64, error) {
 	var leaderChanged bool
 
 	c.ForEachMember(func(c *etcd.Client, m *etcdserverpb.Member) error {
-		cURL := etcd.URL2Address(m.PeerURLs[0])
+		cURL := m.PeerURLs[0]
 
-		resp, err := c.Status(ctx, etcd.ClientURL(cURL, c.SC.TLSEnabled()))
+		resp, err := c.Status(ctx, cURL)
 		if err != nil {
 			unhealthyMembers = append(unhealthyMembers, cURL)
 			return nil

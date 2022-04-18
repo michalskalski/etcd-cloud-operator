@@ -28,9 +28,9 @@ import (
 )
 
 const (
-	defaultClientPort  = 2379
-	defaultPeerPort    = 2380
-	defaultMetricsPort = 2381
+	DefaultClientPort  int32 = 2379
+	DefaultPeerPort    int32 = 2380
+	DefaultMetricsPort int32 = 2381
 
 	defaultDialTimeout    = 5 * time.Second
 	defaultRequestTimeout = 5 * time.Second
@@ -49,6 +49,9 @@ type EtcdConfiguration struct {
 	AutoCompactionRetention string              `yaml:"auto-compaction-retention"`
 	InitACL                 *ACLConfig          `yaml:"init-acl,omitempty"`
 	JWTAuthTokenConfig      *JWTAuthTokenConfig `yaml:"jwt-auth-token-config,omitempty"`
+	ClientPort              *int32              `yaml:"clientPort:omitempty"`
+	PeerPort                *int32              `yaml:"peerPort:omitempty"`
+	MetricsPort             *int32              `yaml:"metricsPort:omitempty"`
 }
 
 type SecurityConfig struct {
@@ -127,19 +130,12 @@ func (sc SecurityConfig) TLSEnabled() bool {
 	return sc.AutoTLS || !sc.TLSInfo().Empty()
 }
 
-func ClientsURLs(addresses []string, tlsEnabled bool) (cURLs []string) {
-	for _, address := range addresses {
-		cURLs = append(cURLs, ClientURL(address, tlsEnabled))
-	}
-	return
+func ClientURL(address string, tlsEnabled bool, port int32) string {
+	return fmt.Sprintf("%s://%s:%d", scheme(tlsEnabled), address, port)
 }
 
-func ClientURL(address string, tlsEnabled bool) string {
-	return fmt.Sprintf("%s://%s:%d", scheme(tlsEnabled), address, defaultClientPort)
-}
-
-func peerURL(address string, tlsEnabled bool) string {
-	return fmt.Sprintf("%s://%s:%d", scheme(tlsEnabled), address, defaultPeerPort)
+func peerURL(address string, tlsEnabled bool, port int32) string {
+	return fmt.Sprintf("%s://%s:%d", scheme(tlsEnabled), address, port)
 }
 
 func URL2Address(pURL string) string {
@@ -150,8 +146,8 @@ func URL2Address(pURL string) string {
 	return pURLu.Host
 }
 
-func metricsURLs(address string) []url.URL {
-	u, _ := url.Parse(fmt.Sprintf("http://%s:%d", address, defaultMetricsPort))
+func metricsURLs(address string, port int32) []url.URL {
+	u, _ := url.Parse(fmt.Sprintf("http://%s:%d", address, port))
 	return []url.URL{*u}
 }
 
