@@ -8,7 +8,7 @@ go_library(
     deps = [
         "//pkg/providers",
         "//pkg/providers/snapshot",
-        "@io_etcd_go_etcd_etcdutl_v3//snapshot:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "@io_etcd_go_etcd_etcdutl_v3//snapshot",
+        "@org_uber_go_zap//:zap",
     ],
 )

@@ -11,6 +11,6 @@ go_library(
     deps = [
         "//pkg/providers",
         "//pkg/providers/asg",
-        "@org_uber_go_zap//:go_default_library",
+        "@org_uber_go_zap//:zap",
     ],
 )
