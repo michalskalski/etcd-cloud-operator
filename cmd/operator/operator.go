@@ -54,6 +54,11 @@ func main() {
 		config.ECO.WebServerPort = &port
 	}
 
+	if config.ECO.Etcd.AdvertiseAddress == "" {
+		config.ECO.Etcd.AdvertiseAddress = os.Getenv("POD_IP")
+		logger.Logger.Warn("Set Advertise address to", zap.String("ip", config.ECO.Etcd.AdvertiseAddress))
+	}
+
 	// Run.
 	operator.New(config.ECO).Run(*flagWeServerPort)
 }

@@ -1,0 +1,24 @@
+diff -urN io_opentelemetry_go_proto_otlp_orig/collector/metrics/v1/BUILD.bazel io_opentelemetry_go_proto_otlp/collector/metrics/v1/BUILD.bazel
+--- io_opentelemetry_go_proto_otlp_orig/collector/metrics/v1/BUILD.bazel        2022-04-19 04:32:13.440439218 -0700
++++ io_opentelemetry_go_proto_otlp/collector/metrics/v1/BUILD.bazel     2022-04-19 04:32:55.699353889 -0700
+@@ -11,7 +11,7 @@
+     visibility = ["//visibility:public"],
+     deps = [
+         "//metrics/v1:metrics",
+-        "@com_github_golang_protobuf//descriptor:go_default_library_gen",
++        "@com_github_golang_protobuf//descriptor:descriptor",
+         "@com_github_golang_protobuf//proto:go_default_library",
+         "@com_github_grpc_ecosystem_grpc_gateway//runtime:go_default_library",
+         "@com_github_grpc_ecosystem_grpc_gateway//utilities:go_default_library",
+diff -urN io_opentelemetry_go_proto_otlp_orig/collector/trace/v1/BUILD.bazel io_opentelemetry_go_proto_otlp/collector/trace/v1/BUILD.bazel
+--- io_opentelemetry_go_proto_otlp_orig/collector/trace/v1/BUILD.bazel  2022-04-19 04:32:13.440439218 -0700
++++ io_opentelemetry_go_proto_otlp/collector/trace/v1/BUILD.bazel       2022-04-19 04:33:17.488224209 -0700
+@@ -12,7 +12,7 @@
+     visibility = ["//visibility:public"],
+     deps = [
+         "//trace/v1:trace",
+-        "@com_github_golang_protobuf//descriptor:go_default_library_gen",
++        "@com_github_golang_protobuf//descriptor:descriptor",
+         "@com_github_golang_protobuf//proto:go_default_library",
+         "@com_github_grpc_ecosystem_grpc_gateway//runtime:go_default_library",
+         "@com_github_grpc_ecosystem_grpc_gateway//utilities:go_default_library",

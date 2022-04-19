@@ -15,6 +15,7 @@
 package sts
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -32,7 +33,7 @@ func init() {
 
 type sts struct {
 	namespace, name, serviceName, dnsClusterSuffix string
-	replicas int
+	replicas                                       int
 
 	self instance
 }
@@ -64,16 +65,6 @@ func (a *sts) Configure(providerConfig asg.Config) (err error) {
 		return
 	}
 
-	a.serviceName, err = envOrErr("STATEFULSET_SERVICE_NAME")
-	if err != nil {
-		return
-	}
-
-	a.dnsClusterSuffix, err = envOrErr("STATEFULSET_DNS_CLUSTER_SUFFIX")
-	if err != nil {
-		return
-	}
-
 	replicas, err := envOrErr("STATEFULSET_REPLICAS")
 	if err != nil {
 		return
@@ -83,24 +74,28 @@ func (a *sts) Configure(providerConfig asg.Config) (err error) {
 		return errors.New("STATEFULSET_REPLICAS should be an integer")
 	}
 
-	a.self.name, err = envOrErr("HOSTNAME")
+	a.self.name, err = envOrErr("POD_NAME")
 	if err != nil {
 		return
 	}
-	a.self.address = fmt.Sprintf("%s.%s.%s.svc.%s", a.self.name, a.serviceName, a.namespace, a.dnsClusterSuffix)
 
-	zap.S().Debugf("Running as %s within Statefulset %s of %d replicas, with headless service %s.%s.svc.%s", a.self.address, a.name, a.replicas, a.serviceName, a.namespace, a.dnsClusterSuffix)
 	return
 }
 
 func (a *sts) AutoScalingGroupStatus() ([]asg.Instance, asg.Instance, int, error) {
-	instances := make([]asg.Instance, 0, a.replicas)
-	instancesStr := make([]string, 0, a.replicas)
+	var instances []asg.Instance
+	var instancesStr []string
 
-	for i:=0; i<a.replicas; i++ {
+	client := k8Client()
+	pods, err := GetPodsForApp(client, context.Background(), a.namespace, a.name)
+	if err != nil {
+		return nil, &a.self, a.replicas, err
+	}
+
+	for _, pod := range pods {
 		instance := instance{
-			name: fmt.Sprintf("%s-%d", a.name, i),
-			address: fmt.Sprintf("%s-%d.%s.%s.svc.%s", a.name, i, a.serviceName, a.namespace, a.dnsClusterSuffix),
+			name:    pod.Name,
+			address: pod.Status.PodIP,
 		}
 		instances = append(instances, &instance)
 		instancesStr = append(instancesStr, instance.address)

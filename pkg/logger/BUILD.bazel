@@ -9,7 +9,7 @@ go_library(
         "@io_etcd_go_etcd_client_pkg_v3//logutil",
         "@io_etcd_go_etcd_server_v3//embed",
         "@io_moul_zapfilter//:zapfilter",
-        "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//:grpc",
         "@org_golang_google_grpc//grpclog",
         "@org_uber_go_zap//:zap",
         "@org_uber_go_zap//zapcore",

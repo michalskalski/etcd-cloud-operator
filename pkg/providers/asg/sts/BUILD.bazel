@@ -2,11 +2,18 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "sts",
-    srcs = ["sts.go"],
+    srcs = [
+        "k8s.go",
+        "sts.go",
+    ],
     importpath = "github.com/quentin-m/etcd-cloud-operator/pkg/providers/asg/sts",
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/providers/asg",
+        "@io_k8s_api//core/v1:core",
+        "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
+        "@io_k8s_client_go//kubernetes",
+        "@io_k8s_sigs_controller_runtime//:controller-runtime",
         "@org_uber_go_zap//:zap",
     ],
 )
