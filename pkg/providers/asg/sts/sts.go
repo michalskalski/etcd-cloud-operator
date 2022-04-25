@@ -16,10 +16,8 @@ package sts
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"go.uber.org/zap"
@@ -63,15 +61,6 @@ func (a *sts) Configure(providerConfig asg.Config) (err error) {
 	a.name, err = envOrErr("STATEFULSET_NAME")
 	if err != nil {
 		return
-	}
-
-	replicas, err := envOrErr("STATEFULSET_REPLICAS")
-	if err != nil {
-		return
-	}
-	a.replicas, err = strconv.Atoi(replicas)
-	if err != nil {
-		return errors.New("STATEFULSET_REPLICAS should be an integer")
 	}
 
 	a.self.name, err = envOrErr("POD_NAME")

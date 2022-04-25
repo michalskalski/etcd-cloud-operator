@@ -16,7 +16,7 @@ func k8Client() *kubernetes.Clientset {
 }
 
 func GetPodsForApp(clientset *kubernetes.Clientset, ctx context.Context, namespace, appName string) ([]corev1.Pod, error) {
-	labelSelector := fmt.Sprintf("app.kubernetes.io/name=%s", appName)
+	labelSelector := fmt.Sprintf("app=%s", appName)
 	opts := metav1.ListOptions{LabelSelector: labelSelector}
 	list, err := clientset.CoreV1().Pods(namespace).List(ctx, opts)
 	if err != nil {
