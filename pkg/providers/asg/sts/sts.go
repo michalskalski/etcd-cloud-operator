@@ -89,9 +89,12 @@ func (a *sts) AutoScalingGroupStatus() ([]asg.Instance, asg.Instance, int, error
 		instances = append(instances, &instance)
 		instancesStr = append(instancesStr, instance.address)
 	}
-	zap.S().Debugf("Discovered %d / %d replicas: %s", len(instances), a.replicas, strings.Join(instancesStr, ", "))
-
-	return instances, &a.self, a.replicas, nil
+	replicas, err := GetSTSReplicas(client, context.Background(), a.namespace, a.name)
+	if err != nil {
+		return nil, &a.self, a.replicas, err
+	}
+	zap.S().Debugf("Discovered %d / %d replicas: %s", len(instances), replicas, strings.Join(instancesStr, ", "))
+	return instances, &a.self, replicas, nil
 }
 
 func envOrErr(key string) (value string, err error) {

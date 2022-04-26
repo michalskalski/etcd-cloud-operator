@@ -24,3 +24,11 @@ func GetPodsForApp(clientset *kubernetes.Clientset, ctx context.Context, namespa
 	}
 	return list.Items, nil
 }
+
+func GetSTSReplicas(clientset *kubernetes.Clientset, ctx context.Context, namespace, stsName string) (int, error) {
+	sts, err := clientset.AppsV1().StatefulSets(namespace).Get(ctx, stsName, metav1.GetOptions{})
+	if err != nil {
+		return 0, err
+	}
+	return int(*sts.Spec.Replicas), nil
+}
