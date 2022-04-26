@@ -39,14 +39,15 @@ type Client struct {
 	clientsAddresses []string
 	autoSync         bool
 
-	SC SecurityConfig
-	TC *tls.Config
+	SC   SecurityConfig
+	TC   *tls.Config
+	Port int32
 }
 
 // NewClient creates a new etcd client wrapper.
 //
 // The client must be closed.
-func NewClient(clientsAddresses []string, sc SecurityConfig, autoSync bool) (*Client, error) {
+func NewClient(clientsAddresses []string, sc SecurityConfig, autoSync bool, port int32) (*Client, error) {
 	tc, err := sc.ClientConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read client transport security: %s", err)
@@ -58,7 +59,7 @@ func NewClient(clientsAddresses []string, sc SecurityConfig, autoSync bool) (*Cl
 	}
 
 	client, err := clientv3.New(clientv3.Config{
-		Endpoints:        clientsAddresses,
+		Endpoints:        ClientsURLs(clientsAddresses, sc.TLSEnabled(), port),
 		DialTimeout:      defaultDialTimeout,
 		TLS:              tc,
 		AutoSyncInterval: autoSyncInterval,
@@ -75,8 +76,9 @@ func NewClient(clientsAddresses []string, sc SecurityConfig, autoSync bool) (*Cl
 		autoSync:         autoSync,
 		clientsAddresses: clientsAddresses,
 
-		SC: sc,
-		TC: tc,
+		SC:   sc,
+		TC:   tc,
+		Port: port,
 	}, nil
 }
 
@@ -101,7 +103,7 @@ func (c *Client) ForEachMember(f func(*Client, *etcdserverpb.Member) error) erro
 	errChan := make(chan string, len(members))
 	for _, member := range members {
 		go func(member *etcdserverpb.Member) {
-			client, err := NewClient([]string{URL2Address(member.PeerURLs[0])}, c.SC, false)
+			client, err := NewClient([]string{URL2Address(member.PeerURLs[0])}, c.SC, false, c.Port)
 			if err != nil {
 				errChan <- fmt.Sprintf("[%s]: %s", member.Name, err)
 				return
@@ -256,7 +258,7 @@ func (c *Client) GetRevisionsHashes() (map[string]int64, map[string]int64, error
 	defer cancel()
 
 	f := func(c *Client, m *etcdserverpb.Member) error {
-		cURL := m.PeerURLs[0]
+		cURL := ClientURL(URL2Address(m.PeerURLs[0]), c.SC.TLSEnabled(), c.Port)
 
 		s, err := c.Status(ctx, cURL)
 		if err != nil {
@@ -300,7 +302,7 @@ func (c *Client) Cleanup() error {
 		mu.Lock()
 		defer mu.Unlock()
 
-		if _, err := c.Defragment(ctx, m.PeerURLs[0]); err != nil {
+		if _, err := c.Defragment(ctx, ClientURL(URL2Address(m.PeerURLs[0]), c.SC.TLSEnabled(), c.Port)); err != nil {
 			return fmt.Errorf("failed to defragment: %v", err)
 		}
 		return nil

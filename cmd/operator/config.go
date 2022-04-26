@@ -15,10 +15,11 @@
 package main
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	"go.uber.org/zap"
 
@@ -35,18 +36,24 @@ type config struct {
 
 // defaultConfig is a configuration that can be used as a fallback value.
 func defaultConfig() config {
+	clientPort := etcd.DefaultClientPort
+	peerPort := etcd.DefaultPeerPort
+	metricsPort := etcd.DefaultMetricsPort
 	return config{
 		ECO: operator.Config{
-			CheckInterval: 15 * time.Second,
+			CheckInterval:      15 * time.Second,
 			UnhealthyMemberTTL: 2 * time.Minute,
 			Etcd: etcd.EtcdConfiguration{
 				DataDir: "/var/lib/etcd",
 				PeerTransportSecurity: etcd.SecurityConfig{
 					AutoTLS: true,
 				},
-				BackendQuota: 2 * 1024 * 1024 * 1024,
-				AutoCompactionMode: "periodic",
+				BackendQuota:            2 * 1024 * 1024 * 1024,
+				AutoCompactionMode:      "periodic",
 				AutoCompactionRetention: "0",
+				ClientPort:              &clientPort,
+				PeerPort:                &peerPort,
+				MetricsPort:             &metricsPort,
 			},
 			Snapshot: snapshot.Config{
 				Interval: 30 * time.Minute,

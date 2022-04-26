@@ -32,6 +32,7 @@ type Config struct {
 type Cluster struct {
 	Address string `yaml:"address"`
 	Size    int    `yaml:"size"`
+	Port    int32  `yaml:"port"`
 
 	TLS etcd.SecurityConfig `yaml:"tls"`
 }
@@ -45,6 +46,7 @@ func Run(cfg Config) {
 		[]string{cfg.Cluster.Address},
 		cfg.Cluster.TLS,
 		false,
+		cfg.Cluster.Port,
 	)
 	if err != nil {
 		zap.S().With(zap.Error(err)).Fatal("failed to create etcd cluster client")

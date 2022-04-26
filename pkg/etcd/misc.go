@@ -49,9 +49,9 @@ type EtcdConfiguration struct {
 	AutoCompactionRetention string              `yaml:"auto-compaction-retention"`
 	InitACL                 *ACLConfig          `yaml:"init-acl,omitempty"`
 	JWTAuthTokenConfig      *JWTAuthTokenConfig `yaml:"jwt-auth-token-config,omitempty"`
-	ClientPort              *int32              `yaml:"clientPort:omitempty"`
-	PeerPort                *int32              `yaml:"peerPort:omitempty"`
-	MetricsPort             *int32              `yaml:"metricsPort:omitempty"`
+	ClientPort              *int32              `yaml:"clientPort,omitempty"`
+	PeerPort                *int32              `yaml:"peerPort,omitempty"`
+	MetricsPort             *int32              `yaml:"metricsPort,omitempty"`
 }
 
 type SecurityConfig struct {
@@ -128,6 +128,13 @@ func (sc SecurityConfig) ClientConfig() (*tls.Config, error) {
 
 func (sc SecurityConfig) TLSEnabled() bool {
 	return sc.AutoTLS || !sc.TLSInfo().Empty()
+}
+
+func ClientsURLs(addresses []string, tlsEnabled bool, port int32) (cURLs []string) {
+	for _, address := range addresses {
+		cURLs = append(cURLs, ClientURL(address, tlsEnabled, port))
+	}
+	return
 }
 
 func ClientURL(address string, tlsEnabled bool, port int32) string {

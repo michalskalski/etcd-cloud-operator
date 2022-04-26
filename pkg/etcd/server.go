@@ -434,7 +434,7 @@ func (c *Server) runMemberCleaner() {
 			}
 
 			// Determine if the member is healthy and set the last time the member has been seen healthy.
-			if c, err := NewClient([]string{member.PeerURLs[0]}, c.cfg.ClientSC, false); err == nil {
+			if c, err := NewClient([]string{URL2Address(member.PeerURLs[0])}, c.cfg.ClientSC, false, c.cfg.ClientPort); err == nil {
 				if c.IsHealthy(5, 5*time.Second) {
 					members[member.ID].lastSeenHealthy = time.Now()
 				}
@@ -453,7 +453,7 @@ func (c *Server) runMemberCleaner() {
 			}
 			zap.S().Infof("removing member %q that's been unhealthy for %v", member.name, c.cfg.UnhealthyMemberTTL)
 
-			cl, err := NewClient([]string{c.cfg.PrivateAddress}, c.cfg.ClientSC, false)
+			cl, err := NewClient([]string{c.cfg.PrivateAddress}, c.cfg.ClientSC, false, c.cfg.ClientPort)
 			if err != nil {
 				zap.S().With(zap.Error(err)).Warn("failed to create etcd cluster client")
 				continue

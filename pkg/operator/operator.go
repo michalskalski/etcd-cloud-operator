@@ -120,7 +120,7 @@ func (s *Operator) evaluate() error {
 	}
 
 	// Create the etcd cluster client.
-	client, err := etcd.NewClient(instancesAddresses(asgInstances), s.cfg.Etcd.ClientTransportSecurity, true)
+	client, err := etcd.NewClient(instancesAddresses(asgInstances), s.cfg.Etcd.ClientTransportSecurity, true, *s.cfg.Etcd.ClientPort)
 	if err != nil {
 		zap.S().With(zap.Error(err)).Warn("failed to create etcd cluster client")
 	}
