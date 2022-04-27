@@ -63,6 +63,11 @@ func (a *sts) Configure(providerConfig asg.Config) (err error) {
 		return
 	}
 
+	a.self.address, err = envOrErr("POD_IP")
+	if err != nil {
+		return
+	}
+
 	a.self.name, err = envOrErr("POD_NAME")
 	if err != nil {
 		return
